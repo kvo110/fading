@@ -289,11 +289,37 @@ class _FadingTextAnimationState extends State<FadingTextAnimation>
             );
           },
         );
-      case 'Tab 2':
-        return Text(
-          'Content for Tab 2',
-          style: TextStyle(fontSize: 24, color: textColor),
-        );
+      case 'Image':
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            Widget imageWidget = Image.network(
+              'https://i.imgflip.com/3wo442.jpg',
+            width: 400,
+            height: 400,
+          );
+
+          if (_activeAnimation == 'Slide Out') {
+            imageWidget = SlideTransition(
+              position: _slideAnimation,
+              child: imageWidget,
+            );
+          }
+
+          if (_activeAnimation == 'Spin Out') {
+            imageWidget = Transform.rotate(
+              angle: _controller.value * 2 * 3.1416,
+              child: imageWidget,
+            );
+          }
+
+          return AnimatedOpacity(
+            opacity: _isVisible ? 1.0 : 0.0,
+            duration: Duration(seconds: 2),
+            child: imageWidget,
+          );
+        },
+      );
       case 'Tab 3':
         return Text(
           'Content for Tab 3',
