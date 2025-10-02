@@ -1,122 +1,212 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: FadingTextAnimation(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
+class FadingTextAnimation extends StatefulWidget {
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _FadingTextAnimationState createState() => _FadingTextAnimationState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _FadingTextAnimationState extends State<FadingTextAnimation>
+    with SingleTickerProviderStateMixin {
+  bool _isVisible = true; // Controls the visibility of the fading
+  String _selectedTab = 'Text'; // Default tab upon opening the app
+  List<String> _tabs = ['Text', 'Image', 'Spinner']; // Dropdown menu that will display options for interactive animations
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  String _activeAnimation = ''; // Track which animation is selected
+
+  // Animation controller for spin and slide effects
+  late AnimationController _controller;
+  late Animation<double> _rotationAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize animation controller
+    _controller = AnimationController(
+      duration: Duration(seconds: 2),
+      vsync: this,
+    );
+
+    // Spin out animation rotation parameters
+    _rotationAnimation = Tween<double>(begin: 0, end: 1).animate(_controller);
+
+    // Slide out to the right animation
+    _slideAnimation = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset(4.0, 0), // move far enough to exit screen
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose(); 
+    super.dispose();
+  }
+
+  // Gives users the ability to choose an animation they want to see
+  void performAnimation(String animationType) {
+    switch (animationType) {
+      case 'Fade Out':
+        _activeAnimation = 'Fade Out';
+        setState(() {
+          _isVisible = false; // Fade out animations
+        });
+        Future.delayed(Duration(seconds: 2), () { // Match fade duration
+          setState(() {
+            _isVisible = true; // Reset visibility
+          });
+        });
+        break;
+
+      case 'Spin Out':
+        _activeAnimation = 'Spin Out';
+        setState(() {
+          _isVisible = false; // Fade while spinning
+        });
+        _controller.forward(from: 0);
+        Future.delayed(Duration(seconds: 2), () { // Match spin duration
+          _controller.reset();
+          setState(() {
+            _isVisible = true; // Reset visibility
+          });
+        });
+        break;
+
+      case 'Slide Out':
+        _activeAnimation = 'Slide Out';
+        setState(() {
+          _isVisible = false; // Fade while sliding
+        });
+        _controller.forward(from: 0); // Start slide
+        Future.delayed(Duration(seconds: 2), () { // Match slide duration
+          _controller.reset();
+          setState(() {
+            _isVisible = true; // Reset visibility
+          });
+        });
+        break;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        // Dropdown menu placed as title to make it visible
+        title: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: _selectedTab,
+            dropdownColor: Colors.blueGrey, // menu background
+            icon: Icon(Icons.arrow_drop_down, color: Colors.black),
+            style: TextStyle(color: Colors.black, fontSize: 18),
+            items: _tabs.map((tab) {
+              return DropdownMenuItem<String>(
+                value: tab,
+                child: Text(tab),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedTab = value!;
+                _isVisible = true; // Reset fade when switching tabs
+                _controller.reset(); // Reset animation
+              });
+            },
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      body: Center(
+        child: _getTabContent(), // Display content based on selected tab
+      ),
+      // Floating action button
+      floatingActionButton: PopupMenuButton<String>(
+        icon: Icon(Icons.play_arrow), 
+        onSelected: (value) {
+          performAnimation(value); // Trigger animation based on selection
+        },
+        itemBuilder: (BuildContext context) => [
+          PopupMenuItem(
+            value: 'Fade Out',
+            child: Text('Fade Out'),
+          ),
+          PopupMenuItem(
+            value: 'Spin Out',
+            child: Text('Spin Out'),
+          ),
+          PopupMenuItem(
+            value: 'Slide Out',
+            child: Text('Slide Out'),
+          ),
+        ],
+      ),
     );
+  }
+
+  // Returns the content widget depending on selected tab
+  Widget _getTabContent() {
+    switch (_selectedTab) {
+      case 'Text':
+        return AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            Widget textWidget = Text(
+              'Hello, Flutter!',
+              style: TextStyle(fontSize: 24),
+            );
+
+            // Apply slide animation only if Slide Out is selected
+            if (_activeAnimation == 'Slide Out') {
+              textWidget = SlideTransition(
+                position: _slideAnimation,
+                child: textWidget,
+              );
+            }
+
+            // Apply spin animation only if Spin Out is selected
+            if (_activeAnimation == 'Spin Out') {
+              textWidget = Transform.rotate(
+                angle: _controller.value * 2 * 3.1416,
+                child: textWidget,
+              );
+            }
+
+            // Apply fade animation for all animations
+            return AnimatedOpacity(
+              opacity: _isVisible ? 1.0 : 0.0,
+              duration: Duration(seconds: 2),
+              child: textWidget,
+            );
+          },
+        );
+      case 'Tab 2':
+        // Placeholder 
+        return Text(
+          'Content for Tab 2',
+          style: TextStyle(fontSize: 24),
+        );
+      case 'Tab 3':
+        // Placeholder 
+        return Text(
+          'Content for Tab 3',
+          style: TextStyle(fontSize: 24),
+        );
+      default:
+        return Text('Unknown Tab');
+    }
   }
 }
