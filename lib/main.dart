@@ -93,14 +93,19 @@ class _FadingTextAnimationState extends State<FadingTextAnimation>
     with SingleTickerProviderStateMixin {
   bool _isVisible = true; // Controls the visibility of the fading
   String _selectedTab = 'Text'; // Default tab upon opening the app
-  List<String> _tabs = ['Text', 'Image', 'Spinner']; // Dropdown menu for interactive animations
-
+  List<String> _tabs = ['Text', 'Image', 'Play Ground']; // Dropdown menu for interactive animations
+  
   String _activeAnimation = ''; // Track which animation is selected
 
   // Animation controller for spin and slide effects
   late AnimationController _controller;
   late Animation<double> _rotationAnimation;
   late Animation<Offset> _slideAnimation;
+
+  // Variables for Playground tab
+  double _sliderValue = 0.5;
+  Offset _dragPosition = Offset(0, 0);
+  bool _isSpinning = false;
 
   @override
   void initState() {
@@ -320,16 +325,74 @@ class _FadingTextAnimationState extends State<FadingTextAnimation>
           );
         },
       );
-      case 'Tab 3':
-        return Text(
-          'Content for Tab 3',
-          style: TextStyle(fontSize: 24, color: textColor),
+      case 'Play Ground':
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Tap to spin
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  if (_isSpinning) {
+                    _controller.stop();
+                  } else {
+                    _controller.repeat();
+                  }
+                  _isSpinning = !_isSpinning;
+                });
+              },
+              child: RotationTransition(
+                turns: _controller,
+                child: Icon(Icons.autorenew, size: 80, color: textColor),
+              ),
+            ),
+            SizedBox(height: 40),
+
+            // Slider-controlled opacity
+            Column(
+              children: [
+                Slider(
+                  value: _sliderValue,
+                  min: 0.0,
+                  max: 1.0,
+                  onChanged: (value) {
+                    setState(() {
+                      _sliderValue = value;
+                    });
+                  },
+                ),
+                Opacity(
+                  opacity: _sliderValue,
+                  child: Icon(Icons.sports_esports, size: 100, color: textColor),
+                ),
+              ],
+            ),
+            SizedBox(height: 40),
+
+            // Drag the circle 
+            Expanded(
+              child: GestureDetector(
+                onPanUpdate: (details) {
+                  setState(() {
+                    _dragPosition += details.delta;
+                  });
+                },
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: MediaQuery.of(context).size.width / 2 - 40 + _dragPosition.dx,
+                      top: MediaQuery.of(context).size.height / 4 - 40 + _dragPosition.dy,
+                      child: Icon(Icons.circle, size: 80, color: textColor),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         );
+
       default:
-        return Text(
-          'Unknown Tab',
-          style: TextStyle(color: textColor),
-        );
+        return Text("Unknown Tab", style: TextStyle(color: textColor));
     }
   }
 }
